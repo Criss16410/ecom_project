@@ -15,7 +15,11 @@ pipeline {
         stage('Install Backend Dependencies') {
             steps {
                 dir('backend') {
-                    bat 'npm install --ignore-engines'
+                    bat '''
+                        set OPENSSL_CONF=NUL
+                        set NODE_OPTIONS=--openssl-legacy-provider
+                        npm install --ignore-engines
+                    '''
                 }
             }
         }
