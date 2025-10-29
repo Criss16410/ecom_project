@@ -13,9 +13,6 @@ pipeline {
         }
 
         stage('Install Backend Dependencies') {
-            environment {
-                OPENSSL_CONF = "${tool 'NodeJS'}/ssl/openssl.cnf"
-            }
             steps {
                 dir('backend') {
                     bat 'npm install --ignore-engines'
