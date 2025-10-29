@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS' // Cambiado al nombre existente en Jenkins
+        nodejs 'NodeJS'
     }
 
     stages {
@@ -14,8 +14,7 @@ pipeline {
 
         stage('Install Backend Dependencies') {
             environment {
-                // Ruta válida dentro de Node18 para evitar error OpenSSL
-                OPENSSL_CONF = "${tool 'Node18'}/ssl/openssl.cnf"
+                OPENSSL_CONF = "${tool 'NodeJS'}/ssl/openssl.cnf"
             }
             steps {
                 dir('backend') {
@@ -27,7 +26,7 @@ pipeline {
         stage('Run Backend Tests') {
             steps {
                 dir('backend') {
-                    bat 'npm test || exit 0' // evita detener pipeline si no hay tests
+                    bat 'npm test || exit 0'
                 }
             }
         }
@@ -59,3 +58,4 @@ pipeline {
         }
     }
 }
+
