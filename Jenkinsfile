@@ -27,7 +27,11 @@ pipeline {
         stage('Run Backend Tests') {
             steps {
                 dir('backend') {
-                    bat 'npm test || exit 0'
+                    bat '''
+                        set OPENSSL_CONF=NUL
+                        set NODE_OPTIONS=--openssl-legacy-provider
+                        npm test || exit 0
+                    '''
                 }
             }
         }
