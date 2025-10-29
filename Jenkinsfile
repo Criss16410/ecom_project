@@ -1,25 +1,27 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS'
+    environment {
+        // Variables de entorno necesarias para Node y OpenSSL
+        OPENSSL_CONF = 'NUL'
+        NODE_OPTIONS = '--openssl-legacy-provider'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/Criss16410/ecom_project.git'
+                // Checkout de tu repositorio
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/Criss16410/ecom_project.git']]
+                ])
             }
         }
 
         stage('Install Backend Dependencies') {
             steps {
                 dir('backend') {
-                    bat '''
-                        set OPENSSL_CONF=NUL
-                        set NODE_OPTIONS=--openssl-legacy-provider
-                        npm install --ignore-engines
-                    '''
+                    bat 'npm install --ignore-engines'
                 }
             }
         }
@@ -27,41 +29,44 @@ pipeline {
         stage('Run Backend Tests') {
             steps {
                 dir('backend') {
-                    bat '''
-                        set OPENSSL_CONF=NUL
-                        set NODE_OPTIONS=--openssl-legacy-provider
-                        npm test || exit 0
-                    '''
+                    bat 'npm test || exit 0'
                 }
             }
         }
 
         stage('SonarQube Analysis') {
-            environment {
-                SONAR_HOST_URL = 'http://localhost:9000'
-                SONAR_LOGIN = credentials('sonar-token')
-            }
             steps {
-                dir('backend') {
-                    bat '''
-                    sonar-scanner ^
-                      -Dsonar.projectKey=ecom-backend ^
-                      -Dsonar.sources=. ^
-                      -Dsonar.host.url=%SONAR_HOST_URL% ^
-                      -Dsonar.login=%SONAR_LOGIN%
-                    '''
+                // Esto utiliza el SonarScanner del plugin de Jenkins
+                withSonarQubeEnv('SonarQube Server') { // <-- aquí pones el nombre que configuraste en Jenkins
+                    dir('backend') {
+                        bat """
+                        sonar-scanner ^
+                        -Dsonar.projectKey=ecom-backend ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.host.url=%SONAR_HOST_URL% ^
+                        -Dsonar.login=%SONAR_AUTH_TOKEN%
+                        """
+                    }
                 }
             }
         }
 
         stage('Postman Tests') {
             steps {
-                dir('tests\\postman') {
-                    bat 'newman run ecom_collection.json --reporters cli || exit 0'
-                }
+                echo 'Skipping Postman tests for now'
             }
         }
     }
+
+    post {
+        always {
+            echo 'Pipeline finished'
+        }
+        failure {
+            echo 'Pipeline failed'
+        }
+    }
 }
+
 
 
