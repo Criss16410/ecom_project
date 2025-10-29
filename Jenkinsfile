@@ -1,65 +1,54 @@
 pipeline {
     agent any
 
-    environment {
-        NODE_OPTIONS = '--openssl-legacy-provider'
+    tools {
+        nodejs "NodeJS"
     }
 
     stages {
-
-        stage('Checkout SCM') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'master',
+                url: 'https://github.com/derejotienda/learn-pipeline-nodejs.git'
             }
         }
 
-        stage('Install Backend Dependencies') {
+        stage('Install dependencies') {
             steps {
-                dir('backend') {
-                    bat 'npm install --ignore-engines'
-                }
+                bat 'npm install'
             }
         }
 
-        stage('Run Backend Tests') {
+        stage('Run Tests') {
             steps {
-                dir('backend') {
-                    bat 'npm test || exit 0'
-                }
+                bat 'npm test'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                // Solo usar el plugin de SonarQube configurado en Jenkins
-                withSonarQubeEnv('SonarQube Server') {
-                    echo 'SonarQube analysis environment set. Analysis will be triggered automatically by the plugin.'
+                withSonarQubeEnv('SonarQubeServer') {
+                    bat """
+                        npx sonar-scanner ^
+                        -Dsonar.projectKey=learn-pipeline-nodejs ^
+                        -Dsonar.sources=. ^
+                        -Dsonar.host.url=http://localhost:9000 ^
+                        -Dsonar.login=admin
+                    """
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                script {
+                    timeout(time: 2, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
                 }
             }
         }
-
-        stage('Postman Tests') {
-            steps {
-                echo 'Skipping Postman Tests'
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline finished successfully'
-        }
-        failure {
-            echo 'Pipeline failed'
-        }
     }
 }
+
 
