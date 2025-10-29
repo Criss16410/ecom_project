@@ -1,0 +1,29 @@
+pipeline {
+  agent any
+  environment {
+    SONAR_HOST = "http://localhost:9000"
+    // SONAR_TOKEN should be defined in Jenkins credentials (type secret text)
+    SONAR_TOKEN = credentials('SONAR_TOKEN_ID')
+  }
+  stages {
+    stage('Checkout') { steps { checkout scm } }
+    stage('Install') { steps { bat 'cd backend && npm ci' } }
+    stage('Unit tests') { steps { bat 'cd backend && npm test' } }
+    stage('SonarQube Analysis') {
+      steps {
+        bat 'cd backend && sonar-scanner -Dsonar.projectKey=ecom-backend -Dsonar.login=%SONAR_TOKEN% -Dsonar.host.url=%SONAR_HOST%'
+      }
+    }
+    stage('Archive') {
+      steps {
+        archiveArtifacts artifacts: 'backend/**', allowEmptyArchive: false
+      }
+    }
+  }
+  post {
+    always {
+      junit 'backend/**/test-results.xml' // optional if using reporters
+      archiveArtifacts artifacts: 'backend/coverage/**', allowEmptyArchive: true
+    }
+  }
+}

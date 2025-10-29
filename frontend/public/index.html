@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Tienda sencilla</title></head>
+<body>
+  <h1>Tienda sencilla</h1>
+  <ul id="list"></ul>
+  <script>
+    async function load(){
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        const ul = document.getElementById('list');
+        data.forEach(p => {
+          const li = document.createElement('li');
+          li.textContent = p.name + ' - $' + p.price;
+          ul.appendChild(li);
+        });
+      } catch (e) {
+        console.error(e);
+        document.body.append(' - Error cargando productos');
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
