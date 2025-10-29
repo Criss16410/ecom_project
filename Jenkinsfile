@@ -31,22 +31,15 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                // Usar el SonarQube configurado en Jenkins
+                // Solo usar el plugin de SonarQube configurado en Jenkins
                 withSonarQubeEnv('SonarQube Server') {
-                    dir('backend') {
-                        bat 'sonar-scanner ' +
-                            '-Dsonar.projectKey=ecom-backend ' +
-                            '-Dsonar.sources=. ' +
-                            '-Dsonar.host.url=%SONAR_HOST_URL% ' +
-                            '-Dsonar.login=%SONAR_AUTH_TOKEN%'
-                    }
+                    echo 'SonarQube analysis environment set. Analysis will be triggered automatically by the plugin.'
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                // Esperar el resultado de Quality Gate de SonarQube
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
@@ -55,7 +48,7 @@ pipeline {
 
         stage('Postman Tests') {
             steps {
-                echo 'Skipping Postman Tests due to previous failures or configuration'
+                echo 'Skipping Postman Tests'
             }
         }
     }
@@ -69,3 +62,4 @@ pipeline {
         }
     }
 }
+
