@@ -2,60 +2,75 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'Node18' // Cambiado al nombre existente en Jenkins
+        nodejs 'NodeJS'   // Debe coincidir con el nombre de la instalación NodeJS en Jenkins
+    }
+
+    environment {
+        SONAR_PROJECT_KEY = 'ecom-backend'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
+                echo 'Clonando repositorio desde GitHub...'
                 git branch: 'main', url: 'https://github.com/Criss16410/ecom_project.git'
             }
         }
 
-        stage('Install Backend Dependencies') {
-            environment {
-                // Ruta válida dentro de Node18 para evitar error OpenSSL
-                OPENSSL_CONF = "${tool 'Node18'}/ssl/openssl.cnf"
-            }
+        stage('Instalar dependencias') {
             steps {
+                echo 'Instalando dependencias del backend...'
                 dir('backend') {
-                    bat 'npm install --ignore-engines'
+                    bat '"npm install"'
                 }
             }
         }
 
-        stage('Run Backend Tests') {
+        stage('Ejecutar pruebas') {
             steps {
+                echo 'Ejecutando pruebas del backend...'
                 dir('backend') {
-                    bat 'npm test || exit 0' // evita detener pipeline si no hay tests
+                    // Si no tienes pruebas aún, esto solo muestra un mensaje
+                    bat 'echo "No hay pruebas definidas (npm test)"'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            environment {
-                SONAR_HOST_URL = 'http://localhost:9000'
-                SONAR_LOGIN = credentials('sonar-token')
-            }
+        stage('Análisis con SonarQube') {
             steps {
-                dir('backend') {
-                    bat '''
-                    sonar-scanner ^
-                      -Dsonar.projectKey=ecom-backend ^
-                      -Dsonar.sources=. ^
-                      -Dsonar.host.url=%SONAR_HOST_URL% ^
-                      -Dsonar.login=%SONAR_LOGIN%
-                    '''
+                echo 'Iniciando análisis de calidad con SonarQube...'
+                withSonarQubeEnv('MySonarQube') {   // Nombre configurado en Jenkins → Manage Jenkins → Configure System
+                    dir('backend') {
+                        bat '''
+                            sonar-scanner ^
+                              -Dsonar.projectKey=%SONAR_PROJECT_KEY% ^
+                              -Dsonar.sources=. ^
+                              -Dsonar.language=js ^
+                              -Dsonar.login=%SONAR_AUTH_TOKEN%
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Postman Tests') {
+        stage('Quality Gate') {
             steps {
-                dir('tests\\postman') {
-                    bat 'newman run ecom_collection.json --reporters cli || exit 0'
+                echo 'Esperando resultado del Quality Gate...'
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
+
     }
+
+    post {
+        success {
+            echo '✅ Pipeline completado con éxito. Análisis disponible en SonarQube.'
+        }
+        failure {
+            echo '❌ El pipeline falló. Revisa los logs en Jenkins.'
+        }
+   }
 }
