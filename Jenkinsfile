@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'
+        nodejs 'NodeJS'   // Debe coincidir con el nombre configurado en Jenkins → Global Tool Configuration
     }
 
     environment {
@@ -10,6 +10,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Clonando repositorio desde GitHub...'
@@ -21,7 +22,7 @@ pipeline {
             steps {
                 echo 'Instalando dependencias del backend...'
                 dir('backend') {
-                    bat '"npm install"'
+                    bat 'npm install'
                 }
             }
         }
@@ -30,7 +31,7 @@ pipeline {
             steps {
                 echo 'Ejecutando pruebas del backend...'
                 dir('backend') {
-                    bat 'echo "No hay pruebas definidas (npm test)"'
+                    bat 'echo No hay pruebas definidas (npm test)'
                 }
             }
         }
@@ -38,7 +39,7 @@ pipeline {
         stage('Análisis con SonarQube') {
             steps {
                 echo 'Iniciando análisis de calidad con SonarQube...'
-                withSonarQubeEnv('MySonarQube') {
+                withSonarQubeEnv('MySonarQube') {   // Nombre configurado en Jenkins → Manage Jenkins → Configure System
                     dir('backend') {
                         bat '''
                             sonar-scanner ^
@@ -60,6 +61,7 @@ pipeline {
                 }
             }
         }
+
     }
 
     post {
@@ -71,5 +73,3 @@ pipeline {
         }
     }
 }
-
-
