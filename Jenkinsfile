@@ -2,22 +2,16 @@ pipeline {
     agent any
 
     tools {
-<<<<<<< HEAD
-        nodejs 'NodeJS'   // Debe coincidir con el nombre de la instalación NodeJS en Jenkins
+        nodejs 'NodeJS'
     }
 
     environment {
         SONAR_PROJECT_KEY = 'ecom-backend'
-=======
-        nodejs "NodeJS"
->>>>>>> 0669f0e0b320bcf1c6ae25356853cb2115182b07
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-<<<<<<< HEAD
                 echo 'Clonando repositorio desde GitHub...'
                 git branch: 'main', url: 'https://github.com/Criss16410/ecom_project.git'
             }
@@ -36,7 +30,6 @@ pipeline {
             steps {
                 echo 'Ejecutando pruebas del backend...'
                 dir('backend') {
-                    // Si no tienes pruebas aún, esto solo muestra un mensaje
                     bat 'echo "No hay pruebas definidas (npm test)"'
                 }
             }
@@ -45,7 +38,7 @@ pipeline {
         stage('Análisis con SonarQube') {
             steps {
                 echo 'Iniciando análisis de calidad con SonarQube...'
-                withSonarQubeEnv('MySonarQube') {   // Nombre configurado en Jenkins → Manage Jenkins → Configure System
+                withSonarQubeEnv('MySonarQube') {
                     dir('backend') {
                         bat '''
                             sonar-scanner ^
@@ -55,55 +48,18 @@ pipeline {
                               -Dsonar.login=%SONAR_AUTH_TOKEN%
                         '''
                     }
-=======
-                git branch: 'master',
-                url: 'https://github.com/derejotienda/learn-pipeline-nodejs.git'
-            }
-        }
-
-        stage('Install dependencies') {
-            steps {
-                bat 'npm install'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                bat 'npm test'
-            }
-        }
-
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    bat """
-                        npx sonar-scanner ^
-                        -Dsonar.projectKey=learn-pipeline-nodejs ^
-                        -Dsonar.sources=. ^
-                        -Dsonar.host.url=http://localhost:9000 ^
-                        -Dsonar.login=admin
-                    """
->>>>>>> 0669f0e0b320bcf1c6ae25356853cb2115182b07
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-<<<<<<< HEAD
                 echo 'Esperando resultado del Quality Gate...'
                 timeout(time: 2, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
-=======
-                script {
-                    timeout(time: 2, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
-                    }
->>>>>>> 0669f0e0b320bcf1c6ae25356853cb2115182b07
                 }
             }
         }
-
     }
 
     post {
@@ -113,7 +69,7 @@ pipeline {
         failure {
             echo '❌ El pipeline falló. Revisa los logs en Jenkins.'
         }
-   }
+    }
 }
 
 
