@@ -39,7 +39,7 @@ pipeline {
         stage('Análisis con SonarQube') {
             steps {
                 echo 'Iniciando análisis de calidad con SonarQube...'
-                withSonarQubeEnv('MySonarQube') {   // Nombre configurado en Jenkins → Manage Jenkins → Configure System
+                withSonarQubeEnv('Proyecto Final') {   // Nombre configurado en Jenkins → Manage Jenkins → Configure System
                     dir('backend') {
                         bat '''
                             sonar-scanner ^
